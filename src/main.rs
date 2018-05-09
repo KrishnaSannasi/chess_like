@@ -5,7 +5,7 @@ extern crate opengl_graphics;
 
 use piston::window::WindowSettings;
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ OpenGL };
+use opengl_graphics::{ GlGraphics, OpenGL };
 
 mod gui;
 mod game;
@@ -26,5 +26,5 @@ fn main() {
         .build()
         .unwrap();
     
-    gui::start(&mut window, &mut Game::new());
+    gui::start(&mut window, &mut Game::new(8, 8), GlGraphics::new(opengl));
 }
