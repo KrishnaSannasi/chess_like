@@ -6,7 +6,6 @@ pub mod pieces;
 use super::gui::{App, Data};
 use self::pieces::{Piece, Alliance, MoveDir, Move};
 
-const BACKGROUND: [f32; 4] = [0.2, 0.35, 0.5, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const SELECTED: [f32; 4] = [0.7, 0.7, 0.1, 1.0];
@@ -177,7 +176,7 @@ impl App for Game {
         });
     }
 
-    fn update(&mut self, args: &UpdateArgs, data: &Data) {
+    fn update(&mut self, _args: &UpdateArgs, _data: &Data) {
         // println!("ups = {}", 1.0 / args.dt);
     }
 

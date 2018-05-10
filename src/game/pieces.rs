@@ -76,15 +76,13 @@ impl MoveDirSet {
     }
 
     pub fn from(del: Vec<(i32, i32)>) -> Self {
-        let mut moves = Vec::new();
+        let mut set = Self::new();
 
         for (dx, dy) in del {
-            moves.push(MoveDir::new(dx, dy));
+            set = set << MoveDir::new(dx, dy);
         }
         
-        Self {
-            moves
-        }
+        set
     }
 }
 
