@@ -11,11 +11,17 @@ pub trait App {
     // called after rendering
     fn post_render(&self, _args: &AfterRenderArgs, _data: &Data) {}
 
-    /// if button is pressed or released (not held)
-    fn handle_button(&mut self, _args: &ButtonArgs, _data: &Data) {}
+    fn handle_key(&mut self, _key: Key, _data: &Data) {}
+    
+    fn handle_mouse(&mut self, _mouse_button: MouseButton, _data: &Data) {}
 
-    // if button is held
-    fn button_held(&mut self, _args: &Button, _data: &Data) {}              
+    fn handle_controller(&mut self, _controller_button: ControllerButton, _data: &Data) {}
+    
+    fn handle_key_held(&mut self, _key: Key, _data: &Data) {}
+    
+    fn handle_mouse_held(&mut self, _mouse_button: MouseButton, _data: &Data) {}
+
+    fn handle_controller_held(&mut self, _controller_button: ControllerButton, _data: &Data) {}
 
     // handle mouse movement
     fn mouse_moved(&mut self, _args: &Motion, _data: &Data) {}
@@ -35,6 +41,8 @@ pub struct Data {
     pub is_window_focus: bool,
     pub screen_width: u32,
     pub screen_height: u32,
+    pub mouse_x: f64,
+    pub mouse_y: f64,
     pub button_held: Vec<Button>
 }
 
@@ -46,6 +54,8 @@ impl Data {
             is_window_focus: false,
             screen_width: size.width,
             screen_height: size.height,
+            mouse_x: 0.0,
+            mouse_y: 0.0,
             button_held: Vec::new()
         }
     }
@@ -53,7 +63,7 @@ impl Data {
 
 pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
     let mut events = Events::new(EventSettings::new());
-    let mut found = false;
+    let mut _found = false;
 
     let mut data = Data::new(window);
 
@@ -61,17 +71,26 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
         match e {
             Event::Custom(a, _b) => {
                 println!("custom = {:?}", a);
-                if found {
+                /*
+                if _found {
                     println!();
                 }
-                found = false;
+                _found = false;
+                */
             },
             Event::Loop(l) => {
                 match l {
                     Loop::Render(r) => app.render(&r, &mut g, &data),
                     Loop::Update(u) => {
                         for button in &data.button_held {
-                            app.button_held(button, &data);
+                            match button {
+                                &Button::Keyboard(key) => 
+                                    app.handle_key_held(key, &data),
+                                &Button::Mouse(mouse_button) => 
+                                    app.handle_mouse_held(mouse_button, &data),
+                                &Button::Controller(controller_button) => 
+                                    app.handle_controller_held(controller_button, &data)
+                            }
                         }
 
                         /*
@@ -85,10 +104,12 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                     Loop::AfterRender(ar) => app.post_render(&ar, &data),
                     Loop::Idle(_a) => () // println!("idle time {:?}ms", _a.dt * 1000.0),
                 }
-                if found {
+                /*
+                if _found {
                     println!();
                 }
-                found = false;
+                _found = false;
+                */
             },
             Event::Input(i) => {
                 match i {
@@ -96,7 +117,14 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                     Input::Button(button) => {
                         // println!("button = {:?}", button);
                         if !data.button_held.contains(&button.button) {
-                            app.handle_button(&button, &data);
+                            match button.button {
+                                Button::Keyboard(key) => 
+                                    app.handle_key(key, &data),
+                                Button::Mouse(mouse_button) => 
+                                    app.handle_mouse(mouse_button, &data),
+                                Button::Controller(controller_button) => 
+                                    app.handle_controller(controller_button, &data)
+                            }
                         }
                         match button.state {
                             ButtonState::Press => {
@@ -122,9 +150,17 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                     // is mouse moved
                     Input::Move(motion) => {
                         // println!("move = {:?}", motion);
+
+                        if let Motion::MouseCursor(x, y) = motion {
+                            data.mouse_x = x;
+                            data.mouse_y = y;
+                        }
+
                         app.mouse_moved(&motion, &data);
                     },
-                    Input::Text(ref text) => println!("text = {:?}", text),     // keyboard text (with modifiers applied)
+                    // keyboard text (with modifiers applied)
+                    Input::Text(ref text) =>
+                        println!("text = {:?}", text),
                     Input::Resize(w, h) => {
                         // println!("resize = {}x{}", w, h);
                         data.screen_width = w;
@@ -136,9 +172,11 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                         data.is_window_focus = focus;
                         app.handle_focus(focus, &data);
                     },
-                    Input::Close(b) => println!("close = {:?}", b),             // is screen closed
+                    // is screen closed
+                    Input::Close(b) =>
+                        println!("close = {:?}", b),
                 }
-                found = true;
+                _found = true;
             }
         }
     }

@@ -36,7 +36,7 @@ const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 impl App for Game {
     fn render(&self, args: &RenderArgs, gl: &mut GlGraphics, data: &Data) {
         use graphics::*;
-        
+
         let s = (min(data.screen_width, data.screen_height) / min(self.width, self.height)) as f64;
         let sz = (s as u32 * min(self.width, self.height)) as f64;
         
@@ -63,3 +63,5 @@ impl App for Game {
         
     }
 }
+
+
