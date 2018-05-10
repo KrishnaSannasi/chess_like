@@ -19,12 +19,12 @@ fn main() {
     // Create an Glutin window.
     let mut window: GlutinWindow = WindowSettings::new(
             "chess-like",
-            [500, 500]
+            [600, 600]
         )
         .opengl(opengl)
         .exit_on_esc(true)
         .build()
         .unwrap();
     
-    gui::start(&mut window, &mut Game::new(8, 8), GlGraphics::new(opengl));
+    gui::start(&mut window, &mut Game::new(20, 20), GlGraphics::new(opengl));
 }
