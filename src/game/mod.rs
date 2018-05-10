@@ -1,6 +1,8 @@
 use piston::input::*;
 use opengl_graphics::{ GlGraphics };
-use graphics::*;
+use piston::window::Size;
+use std::cmp::*;
+use std::cmp::min;
 
 pub mod pieces;
 
@@ -29,15 +31,36 @@ impl Game {
     }
 }
 
-const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+const BACKGROUND: [f32; 4] = [0.2, 0.35, 0.5, 1.0];
+const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
 impl App for Game {
-    fn render(&self, args: &RenderArgs, mut gl: GlGraphics) -> GlGraphics {
+    fn render(&self, args: &RenderArgs, mut gl: GlGraphics, size: Size) -> GlGraphics {
+        use graphics::*;
+
+        let (x, y) = ((args.width / 2) as f64,
+                      (args.height / 2) as f64);
+        let s = (min(size.width, size.height) / min(self.width, self.height)) as f64;
+        let sz = (s as u32 * min(self.width, self.height)) as f64;
+        
         gl.draw(args.viewport(), |c, g| {
             // Clear the screen.
-            clear(GREEN, g);
-
-            
+            clear(BACKGROUND, g);
+            let transform = c.transform.trans((size.width as f64 - sz) / 2.0, (size.height as f64 - sz) / 2.0);
+            for i in 0..self.width {
+                for j in 0..self.height {
+                    let c = {
+                        if (i + j) % 2 == 0 {
+                            WHITE
+                        } else {
+                            BLACK
+                        }
+                    };
+                   rectangle(c, rectangle::square(s * i as f64, s * j as f64, s - 2.0), transform, g);
+                }
+            }
         });
 
         gl
