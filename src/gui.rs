@@ -34,6 +34,8 @@ pub trait App {
 
     // handle window resizing
     fn handle_resize(&mut self, _width: u32, _height: u32, _data: &Data) {}
+
+    fn on_close(&mut self, _args: &CloseArgs, _data: &Data) {}
 }
 
 pub struct Data {
@@ -159,8 +161,7 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                         app.mouse_moved(&motion, &data);
                     },
                     // keyboard text (with modifiers applied)
-                    Input::Text(ref text) =>
-                        println!("text = {:?}", text),
+                    Input::Text(ref _text) => (), // println!("text = {:?}", _text),
                     Input::Resize(w, h) => {
                         // println!("resize = {}x{}", w, h);
                         data.screen_width = w;
@@ -173,8 +174,10 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
                         app.handle_focus(focus, &data);
                     },
                     // is screen closed
-                    Input::Close(b) =>
-                        println!("close = {:?}", b),
+                    Input::Close(close) => {
+                        // println!("close = {:?}", close);
+                        app.on_close(&close, &data);
+                    }
                 }
                 _found = true;
             }
