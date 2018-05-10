@@ -4,18 +4,30 @@ use glutin_window::GlutinWindow;
 use piston::window::Window;
 use opengl_graphics::GlGraphics;
 
-use std::collections::HashMap;
-
 pub trait App {
-    fn render(&self, args: &RenderArgs, gl: &mut GlGraphics, data: &Data);
-    fn update(&mut self, args: &UpdateArgs, data: &Data);
+    fn render(&self, _args: &RenderArgs, _gl: &mut GlGraphics, _data: &Data);
+    fn update(&mut self, _args: &UpdateArgs, _data: &Data);
 
-    fn handle_button(&mut self, args: &ButtonArgs, data: &Data);        // if button is pressed or released (not held)
-    fn button_held(&mut self, args: &Button, data: &Data);          // if button is held
-    fn mouse_moved(&mut self, args: &Motion, data: &Data);              // handle mouse movement
-    fn handle_cursor(&mut self, cursor: bool, data: &Data);             // handle cursor going on and off screen
-    fn handle_focus(&mut self, focus: bool, data: &Data);               // handle window focus going on and off
-    fn handle_resize(&mut self, width: u32, height: u32, data: &Data);  // handle window resizing
+    // called after rendering
+    fn post_render(&self, _args: &AfterRenderArgs, _data: &Data) {}
+
+    /// if button is pressed or released (not held)
+    fn handle_button(&mut self, _args: &ButtonArgs, _data: &Data) {}
+
+    // if button is held
+    fn button_held(&mut self, _args: &Button, _data: &Data) {}              
+
+    // handle mouse movement
+    fn mouse_moved(&mut self, _args: &Motion, _data: &Data) {}
+    
+    // handle cursor going on and off screen
+    fn handle_cursor(&mut self, _cursor: bool, _data: &Data) {}
+
+    // handle window focus going on and off
+    fn handle_focus(&mut self, _focus: bool, _data: &Data) {}
+
+    // handle window resizing
+    fn handle_resize(&mut self, _width: u32, _height: u32, _data: &Data) {}
 }
 
 pub struct Data {
@@ -47,7 +59,7 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
 
     while let Some(e) = events.next(window) {
         match e {
-            Event::Custom(a, b) => {
+            Event::Custom(a, _b) => {
                 println!("custom = {:?}", a);
                 if found {
                     println!();
@@ -70,8 +82,8 @@ pub fn start(window: &mut GlutinWindow, app: &mut App, mut g: GlGraphics) {
 
                         app.update(&u, &data);
                     },
-                    Loop::AfterRender(ar) => (),
-                    Loop::Idle(a) => () // println!("idle time {:?}ms", a.dt * 1000.0),
+                    Loop::AfterRender(ar) => app.post_render(&ar, &data),
+                    Loop::Idle(_a) => () // println!("idle time {:?}ms", _a.dt * 1000.0),
                 }
                 if found {
                     println!();
