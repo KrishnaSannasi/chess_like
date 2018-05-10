@@ -34,8 +34,8 @@ impl Game {
         Game::from_vec(width, height, Vec::new(), vec![team_one, team_two])
     }
 
-    pub fn from_vec(width: u32, height: u32, pieces: Vec<Piece>, teams: Vec<Alliance>) -> Game {
-        Game {
+    pub fn from_vec(width: u32, height: u32, pieces: Vec<Piece>, teams: Vec<Alliance>) -> Self {
+        Self {
             width, height, 
             selected_x: 100, selected_y: 100,
             pieces, teams, turn: 0,
@@ -143,12 +143,12 @@ impl App for Game {
     fn render(&self, args: &RenderArgs, gl: &mut GlGraphics, data: &Data) {
         use graphics::*;
 
-        let (s, dw, dh) = self.get_tile_size(data);
+        let (s, _dw, dh) = self.get_tile_size(data);
 
         gl.draw(args.viewport(), |c, g| {
             // Clear the screen.
             clear(WHITE, g);
-            let transform = c.transform.trans(dw, dh).scale(s, s); //.trans((data.screen_width as f64 - sz), (data.screen_height as f64 - sz) / 2.0);
+            let transform = c.transform.trans(0.0, dh).scale(s, s); //.trans((data.screen_width as f64 - sz), (data.screen_height as f64 - sz) / 2.0);
             let piece = self.get_piece(self.selected_x, self.selected_y);
             
             for i in 0..self.width {
