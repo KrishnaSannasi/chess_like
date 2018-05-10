@@ -4,7 +4,7 @@ extern crate glutin_window;
 extern crate opengl_graphics;
 
 use piston::window::WindowSettings;
-use glutin_window::GlutinWindow as Window;
+use glutin_window::GlutinWindow;
 use opengl_graphics::{ GlGraphics, OpenGL };
 
 mod gui;
@@ -17,7 +17,7 @@ fn main() {
     let opengl = OpenGL::V4_5;
 
     // Create an Glutin window.
-    let mut window: Window = WindowSettings::new(
+    let mut window: GlutinWindow = WindowSettings::new(
             "chess-like",
             [500, 500]
         )
