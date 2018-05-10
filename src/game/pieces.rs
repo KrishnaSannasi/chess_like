@@ -61,6 +61,14 @@ impl MoveDir {
             dx, dy
         }
     }
+
+    pub fn dx(&self) -> i32 {
+        self.dx
+    }
+
+    pub fn dy(&self) -> i32 {
+        self.dy
+    }
 }
 
 #[derive(Debug, Clone)]

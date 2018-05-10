@@ -2,8 +2,10 @@ use piston::input::*;
 use opengl_graphics::{ GlGraphics };
 
 pub mod pieces;
+pub mod action;
 
 use super::gui::{App, Data};
+use self::action::Action;
 use self::pieces::{Piece, Alliance, MoveDir, Move};
 
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -21,7 +23,7 @@ pub struct Game {
     width: u32, height: u32,
     selected_x: u32, selected_y: u32,
     pieces: Vec<Piece>, teams: Vec<Alliance>,
-    turn: usize
+    turn: usize, action_stack: Vec<Action>
 }
 
 impl Game {
@@ -36,7 +38,8 @@ impl Game {
         Game {
             width, height, 
             selected_x: 100, selected_y: 100,
-            pieces, teams, turn: 0
+            pieces, teams, turn: 0,
+            action_stack: Vec::new()
         }
     }
 
@@ -184,14 +187,17 @@ impl App for Game {
         let (x, y) = self.to_grid(data.mouse_x, data.mouse_y, data);
         let (sx, sy) = (self.selected_x, self.selected_y);
         let (mut do_remove, mut deselect) = (None, false);
+        let mut action = None;
 
         match mouse_button {
             MouseButton::Left => {
                 if sx == x && sy == y {
                     let turn = self.turn;
                     match self.place(x, y, turn) {
-                        Ok(()) => 
-                            deselect = true,
+                        Ok(()) =>  {
+                            deselect = true;
+                            action = Some(Action::PLACE(x, y))
+                        }
                         Err(msg) => {
                             println!("{}", msg);
                             println!("{:?}", self.get_piece(x, y));
@@ -228,6 +234,7 @@ impl App for Game {
                             Some(p) => {
                                 if (*p.team() == cur_team) && (do_remove.is_none() || do_remove.unwrap()) {
                                     p.apply(Move::from(dir));
+                                    action = Some(Action::MOVE(sx, sy, dir.dx(), dir.dy()));
                                     deselect = true;
                                 }
                             },
@@ -249,7 +256,11 @@ impl App for Game {
                 self.selected_x = 100;
                 self.selected_y = 100;
             }
-        }
+        }; // end match
+        match action {
+            Some(a) => self.action_stack.push(a),
+            None => (),
+        };
     }
 }
 
