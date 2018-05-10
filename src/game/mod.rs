@@ -6,7 +6,7 @@ use std::cmp::min;
 
 pub mod pieces;
 
-use super::gui::App;
+use super::gui::{App, Data};
 use self::pieces::{Piece, Move};
 
 pub struct Game {
@@ -37,18 +37,18 @@ const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
 impl App for Game {
-    fn render(&self, args: &RenderArgs, mut gl: GlGraphics, size: Size) -> GlGraphics {
+    fn render(&self, args: &RenderArgs, mut gl: &mut GlGraphics, data: &Data) {
         use graphics::*;
 
         let (x, y) = ((args.width / 2) as f64,
                       (args.height / 2) as f64);
-        let s = (min(size.width, size.height) / min(self.width, self.height)) as f64;
+        let s = (min(data.screen_width, data.screen_height) / min(self.width, self.height)) as f64;
         let sz = (s as u32 * min(self.width, self.height)) as f64;
         
         gl.draw(args.viewport(), |c, g| {
             // Clear the screen.
             clear(BACKGROUND, g);
-            let transform = c.transform.trans((size.width as f64 - sz) / 2.0, (size.height as f64 - sz) / 2.0);
+            let transform = c.transform.trans((data.screen_width as f64 - sz) / 2.0, (data.screen_height as f64 - sz) / 2.0);
             for i in 0..self.width {
                 for j in 0..self.height {
                     let c = {
@@ -62,11 +62,33 @@ impl App for Game {
                 }
             }
         });
-
-        gl
     }
 
-    fn update(&mut self, args: &UpdateArgs) {
+    fn update(&mut self, args: &UpdateArgs, data: &Data) {
+        
+    }
+    
+    fn handle_button(&mut self, args: &ButtonArgs, data: &Data) {
+
+    }
+
+    fn button_held(&mut self, args: &Button, data: &Data) {
+
+    }
+    
+    fn mouse_moved(&mut self, args: &Motion, data: &Data) {
+
+    }
+    
+    fn handle_cursor(&mut self, cursor: bool, data: &Data) {
+
+    }
+
+    fn handle_focus(&mut self, focus: bool, data: &Data) {
+
+    }
+
+    fn handle_resize(&mut self, width: u32, height: u32, data: &Data) {
 
     }
 }
