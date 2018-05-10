@@ -1,6 +1,19 @@
+#[derive(Debug, Clone, PartialEq)]
+pub struct Alliance {
+    pub color: [f32; 4],
+    pub name: String
+}
+
+impl Alliance {
+    pub fn new(name: &str, color: [f32; 4]) -> Alliance {
+        Alliance { name: String::from(name), color }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Piece {
-    x: i32, y: i32, moved: bool
+    x: i32, y: i32, moved: bool,
+    team: Alliance
 }
 
 pub struct Move {
@@ -8,10 +21,10 @@ pub struct Move {
 }
 
 impl Piece {
-    pub fn new(x: u16, y: u16) -> Piece {
+    pub fn new(x: u16, y: u16, team: &Alliance) -> Piece {
         Piece {
             x: x as i32, y: y as i32,
-            moved: false
+            moved: false, team: team.clone()
         }
     }
 
@@ -19,6 +32,18 @@ impl Piece {
         self.x += m.dx;
         self.y += m.dy;
         self.moved = true;
+    }
+
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+    
+    pub fn team(&self) -> &Alliance {
+        &self.team
     }
 }
 

@@ -26,5 +26,5 @@ fn main() {
         .build()
         .unwrap();
     
-    gui::start(&mut window, &mut Game::new(20, 20), GlGraphics::new(opengl));
+    gui::start(&mut window, &mut Game::new(10 ,10), GlGraphics::new(opengl));
 }
