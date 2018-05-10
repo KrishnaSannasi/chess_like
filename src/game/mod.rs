@@ -1,7 +1,5 @@
 use piston::input::*;
 use opengl_graphics::{ GlGraphics };
-use piston::window::Size;
-use std::cmp::*;
 use std::cmp::min;
 
 pub mod pieces;
@@ -32,16 +30,13 @@ impl Game {
 }
 
 const BACKGROUND: [f32; 4] = [0.2, 0.35, 0.5, 1.0];
-const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
 impl App for Game {
-    fn render(&self, args: &RenderArgs, mut gl: &mut GlGraphics, data: &Data) {
+    fn render(&self, args: &RenderArgs, gl: &mut GlGraphics, data: &Data) {
         use graphics::*;
-
-        let (x, y) = ((args.width / 2) as f64,
-                      (args.height / 2) as f64);
+        
         let s = (min(data.screen_width, data.screen_height) / min(self.width, self.height)) as f64;
         let sz = (s as u32 * min(self.width, self.height)) as f64;
         
@@ -66,29 +61,5 @@ impl App for Game {
 
     fn update(&mut self, args: &UpdateArgs, data: &Data) {
         
-    }
-    
-    fn handle_button(&mut self, args: &ButtonArgs, data: &Data) {
-
-    }
-
-    fn button_held(&mut self, args: &Button, data: &Data) {
-
-    }
-    
-    fn mouse_moved(&mut self, args: &Motion, data: &Data) {
-
-    }
-    
-    fn handle_cursor(&mut self, cursor: bool, data: &Data) {
-
-    }
-
-    fn handle_focus(&mut self, focus: bool, data: &Data) {
-
-    }
-
-    fn handle_resize(&mut self, width: u32, height: u32, data: &Data) {
-
     }
 }
