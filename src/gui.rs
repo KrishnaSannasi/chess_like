@@ -16,6 +16,8 @@ pub trait App {
     // called after rendering
     fn post_render(&self, _args: &AfterRenderArgs) {}
 
+    fn idle(&self, _args: &IdleArgs) {}
+
     fn handle_key(&mut self, _key: Key) {}
     
     fn handle_mouse(&mut self, _mouse_button: MouseButton, _mouse_x: f64, _mouse_y: f64) {}
@@ -113,13 +115,27 @@ pub fn start<T>(mut window: PistonWindow, mut app: T)
                         unwrap_mut(&mut window).draw_2d(&e, |c, g| app.render(c, g));
                     },
                     Loop::Update(u) => {
+                        let d = unwrap(&data);
+
+                        for button in &d.button_held {
+                            match button {
+                                &Button::Keyboard(key) => 
+                                    app.handle_key_held(key),
+                                &Button::Mouse(mouse_button) => 
+                                    app.handle_mouse_held(mouse_button),
+                                &Button::Controller(controller_button) => 
+                                    app.handle_controller_held(controller_button)
+                            }
+                        }
+
                         app.update(&u);
                     },
-                    Loop::AfterRender(_ar) => {
-
+                    Loop::AfterRender(ar) => {
+                        app.post_render(&ar);
                     },
-                    Loop::Idle(_i) => {
-
+                    Loop::Idle(i) => {
+                        // println!("idle time {:?}ms", _a.dt * 1000.0);
+                        app.idle(&i);
                     }
                 }
             }

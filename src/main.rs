@@ -1,14 +1,9 @@
 extern crate piston;
-extern crate graphics;
-extern crate glutin_window;
-extern crate opengl_graphics;
-extern crate gfx_device_gl;
-extern crate gfx;
-extern crate gfx_graphics;
-extern crate rusttype;
-extern crate texture;
 extern crate piston_window;
-extern crate find_folder;
+extern crate opengl_graphics;
+extern crate graphics;
+extern crate gfx_graphics;
+extern crate gfx_device_gl;
 
 use piston::window::WindowSettings;
 use opengl_graphics::OpenGL;

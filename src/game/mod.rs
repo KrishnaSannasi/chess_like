@@ -1,7 +1,8 @@
 use std::sync::atomic::AtomicPtr;
+use std::path::Path;
 
 use piston_window::*;
-use find_folder::Search;
+use opengl_graphics::glyph_cache::GlyphCache;
 
 pub mod pieces;
 pub mod action;
@@ -197,19 +198,15 @@ impl App for Game {
             ellipse(p.team().color, sq, transform, g);
         }
 
-        let assets = Search::ParentsThenKids(3, 3)
-                        .for_folder("res").unwrap();
-        let ref font = assets.join("FiraSans-Regular.ttf");
+        let ref font = Path::new("res/FiraSans-Regular.ttf");
+        let ref mut cache = GlyphCache::new(font).unwrap();
 
-        match Glyphs::new(font, unwrap(&self.window).factory.clone(), TextureSettings::new()) {
-            Ok(mut glyphs) => {
-                match text::Text::new_color(WHITE, 16).draw("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", &mut glyphs, &c.draw_state, c.transform, g) {
-                    Ok(()) => (),
-                    Err(msg) => println!("{}", msg)
-                };
-            },
+        let transform = c.transform.trans(100.0, 100.0);
+        
+        match text::Text::new_color(WHITE, 64).draw("Hello World", cache, &c.draw_state, transform, g) {
+            Ok(()) => { },
             Err(msg) => println!("{}", msg)
-        }
+        };
     }
     
     fn update(&mut self, _args: &UpdateArgs) {
