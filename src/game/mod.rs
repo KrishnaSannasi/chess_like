@@ -1,8 +1,7 @@
 use std::sync::atomic::AtomicPtr;
-use std::path::Path;
 
 use piston_window::*;
-use opengl_graphics::glyph_cache::GlyphCache;
+use find_folder::Search;
 
 pub mod pieces;
 pub mod action;
@@ -165,6 +164,7 @@ impl App for Game {
 
     fn render(&self, c: Context, g: &mut AppGraphics) {
         use graphics::*;
+        use graphics;
 
         let (s, _dw, dh) = self.get_tile_size();
 
@@ -197,16 +197,18 @@ impl App for Game {
             let sq = rectangle::square(p.x() as f64 + 0.3, p.y() as f64 + 0.3, 0.4);
             ellipse(p.team().color, sq, transform, g);
         }
-
-        let ref font = Path::new("res/FiraSans-Regular.ttf");
-        let ref mut cache = GlyphCache::new(font).unwrap();
+        
+        let font = Search::ParentsThenKids(3, 3)
+                        .for_folder("res").unwrap()
+                        //.join("FiraSans-Regular.ttf")
+                        .join("Verdana.ttf")
+                        ;
+        
+        let ref mut cache = Glyphs::new(font, unwrap(&self.window).factory.clone(), TextureSettings::new()).unwrap();
 
         let transform = c.transform.trans(100.0, 100.0);
         
-        match text::Text::new_color(WHITE, 64).draw("Hello World", cache, &c.draw_state, transform, g) {
-            Ok(()) => { },
-            Err(msg) => println!("{}", msg)
-        };
+        let _ = graphics::text(WHITE, 64, "Hello World", cache, transform, g);
     }
     
     fn update(&mut self, _args: &UpdateArgs) {
