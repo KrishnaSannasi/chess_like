@@ -2,6 +2,7 @@ use std::sync::atomic::AtomicPtr;
 
 use piston_window::*;
 use find_folder::Search;
+use piston_window::character::CharacterCache;
 
 pub mod pieces;
 pub mod action;
@@ -201,14 +202,18 @@ impl App for Game {
         let font = Search::ParentsThenKids(3, 3)
                         .for_folder("res").unwrap()
                         //.join("FiraSans-Regular.ttf")
-                        .join("Verdana.ttf")
+                        //.join("Verdana.ttf")
+                        .join("arial.ttf")
                         ;
-        
-        let ref mut cache = Glyphs::new(font, unwrap(&self.window).factory.clone(), TextureSettings::new()).unwrap();
-
-        let transform = c.transform.trans(100.0, 100.0);
-        
-        let _ = graphics::text(WHITE, 64, "Hello World", cache, transform, g);
+        let settings = TextureSettings::new()
+                                    .mipmap(Filter::Nearest);
+        /*
+        // text handling
+        let ref mut cache = Glyphs::new(font, unwrap(&self.window).factory.clone(), settings).unwrap();
+        let (size, text) = (16, "Hello World");
+        let transform = c.transform.trans(510.0 + cache.width(size, text).unwrap(), 200.0);
+        let _ = graphics::text(BLACK, size, text, cache, transform, g);
+        */
     }
     
     fn update(&mut self, _args: &UpdateArgs) {

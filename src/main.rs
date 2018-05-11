@@ -23,12 +23,14 @@ fn main() {
     // Create an Glutin window.
     let window: PistonWindow = WindowSettings::new(
             "chess-like",
-            [800, 600]
+            [600, 600]
         )
+        .resizable(false)
+        .samples(8)
         .opengl(opengl)
         .exit_on_esc(true)
         .build()
         .unwrap();
     
-    gui::start(window, Game::new(10 ,10));
+    gui::start(window, Game::new(20 ,20));
 }
