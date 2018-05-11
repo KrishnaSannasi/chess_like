@@ -2,10 +2,17 @@ extern crate piston;
 extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
+extern crate gfx_device_gl;
+extern crate gfx;
+extern crate gfx_graphics;
+extern crate rusttype;
+extern crate texture;
+extern crate piston_window;
+extern crate find_folder;
 
 use piston::window::WindowSettings;
-use glutin_window::GlutinWindow;
-use opengl_graphics::{ GlGraphics, OpenGL };
+use opengl_graphics::OpenGL;
+use piston_window::PistonWindow;
 
 mod gui;
 mod game;
@@ -17,7 +24,7 @@ fn main() {
     let opengl = OpenGL::V4_5;
 
     // Create an Glutin window.
-    let mut window: GlutinWindow = WindowSettings::new(
+    let window: PistonWindow = WindowSettings::new(
             "chess-like",
             [800, 600]
         )
@@ -26,5 +33,5 @@ fn main() {
         .build()
         .unwrap();
     
-    gui::start(&mut window, &mut Game::new(10 ,10), GlGraphics::new(opengl));
+    gui::start(window, Game::new(10 ,10));
 }

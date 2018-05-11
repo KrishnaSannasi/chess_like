@@ -1,10 +1,12 @@
-use piston::input::*;
-use opengl_graphics::{ GlGraphics };
+use std::sync::atomic::AtomicPtr;
+
+use piston_window::*;
+use find_folder::Search;
 
 pub mod pieces;
 pub mod action;
 
-use super::gui::{App, Data};
+use super::gui::{App, Data, AppGraphics, unwrap};
 use self::action::Action;
 use self::pieces::{Piece, Alliance, MoveDir, Move};
 
@@ -23,11 +25,14 @@ pub struct Game {
     width: u32, height: u32,
     selected_x: u32, selected_y: u32,
     pieces: Vec<Piece>, teams: Vec<Alliance>,
-    turn: usize, action_stack: Vec<Action>
+    turn: usize, action_stack: Vec<Action>,
+    data: AtomicPtr<Data>,
+    window: AtomicPtr<PistonWindow>,
 }
 
+// related functions
 impl Game {
-    pub fn new(width: u32, height: u32) -> Game {
+    pub fn new(width: u32, height: u32) -> Self {
         let team_one: Alliance = Alliance::new("Team 1", TEAMS[0]);
         let team_two: Alliance = Alliance::new("Team 2", TEAMS[1]);
 
@@ -39,27 +44,17 @@ impl Game {
             width, height, 
             selected_x: 100, selected_y: 100,
             pieces, teams, turn: 0,
-            action_stack: Vec::new()
+            action_stack: Vec::new(),
+            data: AtomicPtr::default(),
+            window: AtomicPtr::default(),
         }
     }
+}
 
-    fn inc(&mut self) {
-        self.turn = (self.turn + 1) % self.teams.len();
-    }
-
+// immutable functions
+impl Game {
     fn cur_team(&self) -> Alliance {
         self.teams[self.turn].clone()
-    }
-
-    fn place(&mut self, x: u32, y: u32, team: usize) -> Result<(), String> {
-        let p = self.get_piece(x, y).is_none();
-
-        if p {
-            self.pieces.push(Piece::new(x as u16, y as u16, &self.teams[team]));
-            Ok(())
-        } else {
-            Err(String::from("Cannot place ontop of another piece"))
-        }
     }
 
     fn get_piece(&self, x: u32, y: u32) -> Option<&Piece> {
@@ -72,6 +67,65 @@ impl Game {
         }
 
         None
+    }
+    
+    fn get_tile_size(&self) -> (f64, f64, f64) {
+        let data = unwrap(&self.data);
+        let (s1, s2) = (data.screen_width as f64 / self.width as f64, data.screen_height as f64 / self.height as f64);
+
+        let s = {
+            if s1 < s2 {
+                s1
+            } else {
+                s2
+            }
+        };
+
+        (s, (data.screen_width  - s as u32 * self.width ) as f64 / 2.0, 
+            (data.screen_height - s as u32 * self.height) as f64 / 2.0)
+    }
+    
+    fn to_grid(&self, x: f64, y: f64) -> (u32, u32) {
+        let (s, _, dh) = self.get_tile_size();
+        
+        let (x, y) = (x, y - dh);
+
+        ((x / s) as u32, (y / s) as u32)
+    }
+
+    fn can_move(&self, piece: Option<&Piece>, x: u32, y: u32) -> bool {
+        let (ix, iy) = (x as i32, y as i32);
+
+        match piece {
+            None => false,
+            Some(p) => {
+                if !p.can_move(MoveDir::new(ix - p.x(), iy - p.y())) {
+                    false
+                } else if let Some(other) = self.get_piece(x, y) {
+                    other.team() != p.team()
+                } else {
+                    true
+                }
+            }
+        }
+    }
+}
+
+// mutable functions
+impl Game {
+    fn inc(&mut self) {
+        self.turn = (self.turn + 1) % self.teams.len();
+    }
+
+    fn place(&mut self, x: u32, y: u32, team: usize) -> Result<(), String> {
+        let p = self.get_piece(x, y).is_none();
+
+        if p {
+            self.pieces.push(Piece::new(x as u16, y as u16, &self.teams[team]));
+            Ok(())
+        } else {
+            Err(String::from("Cannot place ontop of another piece"))
+        }
     }
 
     fn get_piece_mut(&mut self, x: u32, y: u32) -> Option<&mut Piece> {
@@ -97,94 +151,73 @@ impl Game {
                 Err(String::from("No piece at position"))
         }
     }
-
-    fn get_tile_size(&self, data: &Data) -> (f64, f64, f64) {
-        let (s1, s2) = (data.screen_width as f64 / self.width as f64, data.screen_height as f64 / self.height as f64);
-
-        let s = {
-            if s1 < s2 {
-                s1
-            } else {
-                s2
-            }
-        };
-
-        (s, (data.screen_width  - s as u32 * self.width ) as f64 / 2.0, 
-            (data.screen_height - s as u32 * self.height) as f64 / 2.0)
-    }
-
-    fn to_grid(&self, x: f64, y: f64, data: &Data) -> (u32, u32) {
-        let (s, dw, dh) = self.get_tile_size(data);
-        
-        let (x, y) = (x - dw, y - dh);
-
-        ((x / s) as u32, (y / s) as u32)
-    }
-
-    fn can_move(&self, piece: Option<&Piece>, x: u32, y: u32) -> bool {
-        let (ix, iy) = (x as i32, y as i32);
-
-        match piece {
-            None => false,
-            Some(p) => {
-                if !p.can_move(MoveDir::new(ix - p.x(), iy - p.y())) {
-                    false
-                } else if let Some(other) = self.get_piece(x, y) {
-                    other.team() != p.team()
-                } else {
-                    true
-                }
-            }
-        }
-    }
 }
 
 impl App for Game {
-    fn render(&self, args: &RenderArgs, gl: &mut GlGraphics, data: &Data) {
+    fn set_data(&mut self, data: AtomicPtr<Data>) {
+        self.data = data;
+    }
+
+    fn set_window(&mut self, window: AtomicPtr<PistonWindow>) {
+        self.window = window;
+    }
+
+    fn render(&self, c: Context, g: &mut AppGraphics) {
         use graphics::*;
 
-        let (s, _dw, dh) = self.get_tile_size(data);
+        let (s, _dw, dh) = self.get_tile_size();
 
-        gl.draw(args.viewport(), |c, g| {
-            // Clear the screen.
-            clear(WHITE, g);
-            let transform = c.transform.trans(0.0, dh).scale(s, s); //.trans((data.screen_width as f64 - sz), (data.screen_height as f64 - sz) / 2.0);
-            let piece = self.get_piece(self.selected_x, self.selected_y);
-            
-            for i in 0..self.width {
-                for j in 0..self.height {
-                    let c = {
-                        if i == self.selected_x && j == self.selected_y {
-                            SELECTED
-                        }
-                        else if self.can_move(piece, i, j) {
-                            SELECTED_MOVE
-                        }
-                        else if (i + j) % 2 == 0 {
-                            TEAMS_DIM[self.turn]
-                        } else {
-                            BLACK
-                        }
-                    };
+        clear(WHITE, g);
+        let transform = c.transform.trans(0.0, dh).scale(s, s); //.trans((data.screen_width as f64 - sz), (data.screen_height as f64 - sz) / 2.0);
+        let piece = self.get_piece(self.selected_x, self.selected_y);
+        
+        for i in 0..self.width {
+            for j in 0..self.height {
+                let c = {
+                    if i == self.selected_x && j == self.selected_y {
+                        SELECTED
+                    }
+                    else if self.can_move(piece, i, j) {
+                        SELECTED_MOVE
+                    }
+                    else if (i + j) % 2 == 0 {
+                        TEAMS_DIM[self.turn]
+                    } else {
+                        BLACK
+                    }
+                };
 
-                    let sq = rectangle::square(i as f64, j as f64, 1.0);
-                    rectangle(c, sq, transform, g);
-                }
+                let sq = rectangle::square(i as f64, j as f64, 1.0);
+                rectangle(c, sq, transform, g);
             }
+        }
 
-            for p in &self.pieces {
-                let sq = rectangle::square(p.x() as f64 + 0.3, p.y() as f64 + 0.3, 0.4);
-                ellipse(p.team().color, sq, transform, g);
-            }
-        });
+        for p in &self.pieces {
+            let sq = rectangle::square(p.x() as f64 + 0.3, p.y() as f64 + 0.3, 0.4);
+            ellipse(p.team().color, sq, transform, g);
+        }
+
+        let assets = Search::ParentsThenKids(3, 3)
+                        .for_folder("res").unwrap();
+        let ref font = assets.join("FiraSans-Regular.ttf");
+
+        match Glyphs::new(font, unwrap(&self.window).factory.clone(), TextureSettings::new()) {
+            Ok(mut glyphs) => {
+                match text::Text::new_color(WHITE, 16).draw("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", &mut glyphs, &c.draw_state, c.transform, g) {
+                    Ok(()) => (),
+                    Err(msg) => println!("{}", msg)
+                };
+            },
+            Err(msg) => println!("{}", msg)
+        }
     }
-
-    fn update(&mut self, _args: &UpdateArgs, _data: &Data) {
+    
+    fn update(&mut self, _args: &UpdateArgs) {
         // println!("ups = {}", 1.0 / args.dt);
     }
-
-    fn handle_mouse(&mut self, mouse_button: MouseButton, data: &Data) {
-        let (x, y) = self.to_grid(data.mouse_x, data.mouse_y, data);
+    
+    fn handle_mouse(&mut self, mouse_button: MouseButton, mouse_x: f64, mouse_y: f64) {
+        let (x, y) = self.to_grid(mouse_x, mouse_y);
         let (sx, sy) = (self.selected_x, self.selected_y);
         let (mut do_remove, mut deselect) = (None, false);
         let mut action = None;
@@ -263,5 +296,3 @@ impl App for Game {
         };
     }
 }
-
-
