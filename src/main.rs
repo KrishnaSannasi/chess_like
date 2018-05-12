@@ -6,6 +6,7 @@ extern crate opengl_graphics;
 extern crate gfx_graphics;
 extern crate gfx_device_gl;
 extern crate find_folder;
+extern crate rand;
 
 use piston::window::WindowSettings;
 use opengl_graphics::OpenGL;
@@ -32,5 +33,5 @@ fn main() {
         .build()
         .unwrap();
     
-    gui::start(window, Game::new(20 ,20));
+    gui::start(window, Game::new(10, 10));
 }
